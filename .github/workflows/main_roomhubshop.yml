@@ -69,4 +69,4 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az webapp config set --resource-group <Ten-Resource-Group-Cua-Ban> --name roomhubshop --startup-file "gunicorn -k uvicorn.workers.UvicornWorker main:app --bind=0.0.0.0:8000 --timeout 600"
+            az webapp config set --resource-group roomhubshop --name roomhubshop --startup-file "gunicorn -k uvicorn.workers.UvicornWorker main:app --bind=0.0.0.0:8000 --timeout 600"
