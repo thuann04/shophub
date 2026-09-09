@@ -12,7 +12,7 @@ const LoginPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    axios.post('https://roomhub-api.onrender.com/api/login', formData)
+    axios.post('/api/login', formData)
       .then((res) => {
         const data = res.data;
 

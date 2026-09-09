@@ -27,7 +27,7 @@ const DashboardStats = () => {
 
   useEffect(() => {
     setLoading(true);
-    let url = 'https://roomhub-api.onrender.com/api/admin/stats';
+    let url = '/api/admin/stats';
     if (selectedRoomTitle) {
       url += `?room_title=${encodeURIComponent(selectedRoomTitle)}`;
     }

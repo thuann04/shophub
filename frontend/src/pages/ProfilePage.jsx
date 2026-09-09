@@ -33,7 +33,7 @@ const ProfilePage = () => {
       return;
     }
 
-    axios.get(`https://roomhub-api.onrender.com/api/users/${userId}`)
+    axios.get(`/api/users/${userId}`)
       .then(res => {
         setUserInfo(res.data);
         setUpdateForm({
@@ -53,7 +53,7 @@ const ProfilePage = () => {
   const handleUpdateInfo = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.put(`https://roomhub-api.onrender.com/api/users/${userId}/update`, {
+      const res = await axios.put(`/api/users/${userId}/update`, {
         FullName: updateForm.fullName,
         Email: updateForm.email,
         Phone: updateForm.phone
@@ -85,7 +85,7 @@ const ProfilePage = () => {
     }
 
     try {
-      const res = await axios.put(`https://roomhub-api.onrender.com/api/users/${userId}/change-password`, {
+      const res = await axios.put(`/api/users/${userId}/change-password`, {
         OldPassword: passwordForm.oldPassword,
         NewPassword: passwordForm.newPassword
       });
