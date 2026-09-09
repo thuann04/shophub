@@ -1,5 +1,7 @@
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from sqlalchemy import text
 from pydantic import BaseModel
 from database import engine  
@@ -8,6 +10,7 @@ from rooms import router as rooms_router
 from datetime import datetime 
 from favorites import router as favorites_router
 from typing import Optional
+import os
 
 # Import cái vnpay.py 
 from vnpay import router as vnpay_router 
@@ -18,9 +21,6 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    # ==========================================
-    # SỬA DẤU SAO Ở ĐÂY ĐỂ TRỊ BỆNH CORS NÈ NÍ:
-    # ==========================================
     allow_origins=["*"], 
     allow_methods=["*"],
     allow_headers=["*"],
@@ -123,7 +123,6 @@ def change_user_password(user_id: int, data: PasswordChangeSchema):
 # PHẦN ROOMS: Route lấy danh sách phòng
 # ==========================================
 
-# 1. API CẤP QUYỀN LẤY PHÒNG CHO ADMIN & SALER
 @app.get("/api/admin/rooms")
 def get_admin_rooms(role: Optional[str] = Header(None), user_id: Optional[str] = Header(None)):
     try:
@@ -154,7 +153,6 @@ def get_admin_rooms(role: Optional[str] = Header(None), user_id: Optional[str] =
     except Exception as e:
         return {"error": str(e)}
 
-# 2. API LẤY PHÒNG BÌNH THƯỜNG TRANG CHỦ
 @app.get("/api/rooms")
 def get_rooms():
     try:
@@ -194,7 +192,6 @@ def get_pending_salers(role: Optional[str] = Header(None)):
             raise HTTPException(status_code=403, detail="Chỉ sếp tổng Admin mới được quyền xem danh sách này!")
         
         with engine.connect() as conn:
-            # Lấy thông tin các Saler đang nằm ở hàng chờ (RoleID = 4)
             query = text("""
                 SELECT u.UserID, u.Username, p.Email, p.Phone 
                 FROM Users u
@@ -215,7 +212,6 @@ def approve_saler(user_id: int, role: Optional[str] = Header(None)):
             raise HTTPException(status_code=403, detail="Chỉ Admin tối cao mới được quyền duyệt tài khoản!")
             
         with engine.begin() as conn:
-            # Chuyển hóa RoleID từ 4 (Chờ duyệt) sang 2 (Saler chính thức)
             conn.execute(text("UPDATE Users SET RoleID = 2 WHERE UserID = :uid"), {"uid": user_id})
         return {"message": "Đã phê duyệt Saler thành công rực rỡ! Đối tác hiện tại có thể đăng nhập."}
     except Exception as e:
@@ -400,3 +396,19 @@ def update_user_status(user_id: int, data: UserStatusUpdate, role: Optional[str]
         raise he
     except Exception as e:
         return {"error": str(e)}
+
+
+# =========================================================
+# PHỤC VỤ FRONTEND (React + Vite)
+# =========================================================
+if os.path.exists("static"):
+    # Phục vụ folder assets (js, css, ảnh...)
+    app.mount("/assets", StaticFiles(directory="static/assets"), name="assets")
+
+    # Bắt tất cả các route còn lại về index.html (quan trọng cho React Router)
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        file_path = os.path.join("static", full_path)
+        if full_path and os.path.isfile(file_path):
+            return FileResponse(file_path)
+        return FileResponse("static/index.html")
